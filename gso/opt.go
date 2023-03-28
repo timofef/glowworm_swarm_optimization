@@ -14,7 +14,7 @@ type OptimizationConfig struct {
 
 type Function func([]float64) float64
 
-func Optimize(conf OptimizationConfig, f Function) float64 {
+func Optimize(conf OptimizationConfig, f Function) ([]float64, float64) {
 	// Swarm deployment phase
 	s := initSwarm(conf.N, conf.Diap, conf.M)
 	// Main cycle
@@ -27,17 +27,16 @@ func Optimize(conf OptimizationConfig, f Function) float64 {
 		s.updateNeigbourhoodRadius()
 	}
 
+	// Find max value and it's coordinates
 	max := f(s.glowworms[0].coords)
-	//ind := 0
+	ind := 0
 	for i := 1; i < len(s.glowworms); i++ {
 		val := f(s.glowworms[i].coords)
 		if val > max {
 			max = val
-			//ind = i
+			ind = i
 		}
 	}
 
-	//fmt.Println(s.glowworms[ind].coords)
-
-	return max
+	return s.glowworms[ind].coords, max
 }
