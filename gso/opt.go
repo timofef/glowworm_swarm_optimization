@@ -6,27 +6,38 @@ type Interval struct {
 }
 
 type OptimizationConfig struct {
-	MaxTime int // Time steps limit
-	S       int // Swarm size
-	Diap    Interval
+	MaxTime int      // Time steps limit
+	N       int      // Swarm size
+	M       int      // Dimension of solution
+	Diap    Interval // Diap for x vector
 }
 
-type Function struct {
-	N int                          // Space dimensions
-	F func(int, []float64) float64 // Target function
-}
+type Function func([]float64) float64
 
 func Optimize(conf OptimizationConfig, f Function) float64 {
-	// Create swarm
-	s := initSwarm(conf.S, conf.Diap, f.N)
-
+	// Swarm deployment phase
+	s := initSwarm(conf.N, conf.Diap, conf.M)
+	// Main cycle
 	for t := 0; t < conf.MaxTime; t++ {
+		// Luciferin update phase
 		s.updateLuciferin(f)
-
-		// Move glowworms
-		
-		// Update decision radius
+		// Location update phase
+		s.moveGlowworms()
+		// Neighbourhood range update phase
+		s.updateNeigbourhoodRadius()
 	}
 
-	return 0
+	max := f(s.glowworms[0].coords)
+	//ind := 0
+	for i := 1; i < len(s.glowworms); i++ {
+		val := f(s.glowworms[i].coords)
+		if val > max {
+			max = val
+			//ind = i
+		}
+	}
+
+	//fmt.Println(s.glowworms[ind].coords)
+
+	return max
 }
