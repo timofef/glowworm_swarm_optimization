@@ -5,6 +5,22 @@ import (
 	"math/rand"
 )
 
+type Interval struct {
+	Min float64
+	Max float64
+}
+
+type OptimizationConfig struct {
+	MaxTime int      // Time steps limit
+	DeltaF  float64  // Corridor width
+	DeltaT  int      // Corridor length
+	N       int      // Swarm size
+	M       int      // Dimension of solution
+	Diap    Interval // Diap for x vector
+}
+
+type Function func([]float64) float64
+
 // Glowworm swarm
 type swarm struct {
 	glowworms []*glowworm
@@ -31,60 +47,29 @@ func initSwarm(swarmSize int, diap Interval, dim int) *swarm {
 	return s
 }
 
-func (s *swarm) updateLuciferin(f Function) {
+func (s *swarm) updateLuciferin(f Function) (int, float64) {
+	// This stage is combined with calculating fitness function and determining best worm
+	maxVal := -1e30
+	maxInd := 0
+
 	for i := range s.glowworms {
+		s.glowworms[i].val = f(s.glowworms[i].coords)
+		if s.glowworms[i].val > maxVal {
+			maxVal = s.glowworms[i].val
+			maxInd = i
+		}
+
 		decay := (1. - s.ro) * s.glowworms[i].luciferin
-		increase := s.gamma * f(s.glowworms[i].coords)
+		increase := s.gamma * s.glowworms[i].val
 		s.glowworms[i].luciferin = decay + increase
 	}
-}
 
-func (s *swarm) moveGlowworms() {
-	directions := make([][]float64, len(s.glowworms), len(s.glowworms))
-
-	for j, worm := range s.glowworms {
-		// For each glowworm find neighbours
-		neighbours, sum := s.getNeighbours(j)
-		// Best worm doesn't move
-		if len(neighbours) != 0 {
-			// For each neighbour find probability of moving towards it
-			probs := make([]float64, len(neighbours), len(neighbours))
-			for i := range neighbours {
-				probs[i] = (neighbours[i].luciferin - worm.luciferin) / sum
-			}
-			// Choose direction based on probability
-			toss := rand.Float64()
-			lower, upper := 0.0, 0.0
-			var best *glowworm = nil
-			for i := 0; i < len(probs); i++ {
-				lower = upper
-				upper = lower + probs[i]
-				if toss >= lower && toss <= upper {
-					best = neighbours[i]
-					break
-				}
-			}
-			n := norm(best.coords, worm.coords)
-			// Calculate shift in chosen direction
-			directions[j] = make([]float64, len(worm.coords), len(worm.coords))
-			for i := 0; i < len(worm.coords); i++ {
-				directions[j][i] = worm.coords[i] + worm.s*(best.coords[i]-worm.coords[i])/n
-			}
-		} else {
-			directions[j] = make([]float64, len(worm.coords), len(worm.coords))
-			for i := 0; i < len(worm.coords); i++ {
-				directions[j][i] = worm.coords[i]
-			}
-		}
-	}
-	// Move each glowworm
-	for j := range s.glowworms {
-		s.glowworms[j].coords = directions[j]
-	}
+	return maxInd, maxVal
 }
 
 func (s *swarm) getNeighbours(index int) ([]*glowworm, float64) {
 	var neighbours []*glowworm
+	// Sum is needed to calculate probability of movement in direction of neighbour
 	sum := 0.0
 	for _, potentialNeighbour := range s.glowworms {
 		if potentialNeighbour != s.glowworms[index] {

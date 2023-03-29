@@ -5,8 +5,8 @@ type glowworm struct {
 	coords    []float64
 	val       float64 // Value at coordinates
 	luciferin float64 // Luciferin level
-	r         float64 // Local desision radius
-	s         float64 // Fixed step size
+	r         float64 // Initial local desision radius
+	s         float64 // Initial step size (fixed in basic variation)
 }
 
 func initGlowworm(dim int) *glowworm {
