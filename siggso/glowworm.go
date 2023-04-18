@@ -1,4 +1,4 @@
-package gso
+package siggso
 
 type glowworm struct {
 	Coords     []float64

@@ -1,4 +1,4 @@
-package gso
+package siggso
 
 import (
 	"glowworm_swarm_optimization/test_functions"
@@ -76,4 +76,9 @@ func (s *swarm) updateNeigbourhoodRadius() {
 	for i := 0; i < len(s.glowworms); i++ {
 		s.glowworms[i].r = math.Min(RS, math.Max(0, s.glowworms[i].r+BETA*(float64(NT)-float64(s.glowworms[i].neighbours))))
 	}
+}
+
+// Sigmoid
+func fi(t, maxT int) float64 {
+	return 1. - 1./(1.+math.Exp(-LAMBDA*(float64(t)/float64(maxT)-EPS)))
 }

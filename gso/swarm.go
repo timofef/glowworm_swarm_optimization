@@ -1,6 +1,7 @@
 package gso
 
 import (
+	"glowworm_swarm_optimization/utils"
 	"math/rand"
 )
 
@@ -29,21 +30,21 @@ func (s *swarm) moveGlowworms() {
 					break
 				}
 			}
-			n := norm(best.coords, worm.coords)
+			n := utils.Norm(best.Coords, worm.Coords)
 			// Calculate shift in chosen direction
-			directions[j] = make([]float64, len(worm.coords), len(worm.coords))
-			for i := 0; i < len(worm.coords); i++ {
-				directions[j][i] = worm.coords[i] + worm.s*(best.coords[i]-worm.coords[i])/n
+			directions[j] = make([]float64, len(worm.Coords), len(worm.Coords))
+			for i := 0; i < len(worm.Coords); i++ {
+				directions[j][i] = worm.Coords[i] + worm.s*(best.Coords[i]-worm.Coords[i])/n
 			}
 		} else {
-			directions[j] = make([]float64, len(worm.coords), len(worm.coords))
-			for i := 0; i < len(worm.coords); i++ {
-				directions[j][i] = worm.coords[i]
+			directions[j] = make([]float64, len(worm.Coords), len(worm.Coords))
+			for i := 0; i < len(worm.Coords); i++ {
+				directions[j][i] = worm.Coords[i]
 			}
 		}
 	}
 	// Move each glowworm
 	for j := range s.glowworms {
-		s.glowworms[j].coords = directions[j]
+		s.glowworms[j].Coords = directions[j]
 	}
 }

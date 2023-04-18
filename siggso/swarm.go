@@ -1,11 +1,11 @@
-package gso
+package siggso
 
 import (
-	"math"
+	"glowworm_swarm_optimization/utils"
 	"math/rand"
 )
 
-func (s *swarm) moveGlowwormsSig(t, tMax int) {
+func (s *swarm) moveGlowworms(t, maxT int) {
 	directions := make([][]float64, len(s.glowworms), len(s.glowworms))
 
 	for j, worm := range s.glowworms {
@@ -30,25 +30,21 @@ func (s *swarm) moveGlowwormsSig(t, tMax int) {
 					break
 				}
 			}
-			n := norm(best.coords, worm.coords)
+			n := utils.Norm(best.Coords, worm.Coords)
 			// Calculate shift in chosen direction
-			directions[j] = make([]float64, len(worm.coords), len(worm.coords))
-			for i := 0; i < len(worm.coords); i++ {
-				directions[j][i] = worm.coords[i] + worm.s*fi(t, tMax)*(best.coords[i]-worm.coords[i])/n
+			directions[j] = make([]float64, len(worm.Coords), len(worm.Coords))
+			for i := 0; i < len(worm.Coords); i++ {
+				directions[j][i] = worm.Coords[i] + worm.s*fi(t, maxT)*(best.Coords[i]-worm.Coords[i])/n
 			}
 		} else {
-			directions[j] = make([]float64, len(worm.coords), len(worm.coords))
-			for i := 0; i < len(worm.coords); i++ {
-				directions[j][i] = worm.coords[i]
+			directions[j] = make([]float64, len(worm.Coords), len(worm.Coords))
+			for i := 0; i < len(worm.Coords); i++ {
+				directions[j][i] = worm.Coords[i]
 			}
 		}
 	}
 	// Move each glowworm
 	for j := range s.glowworms {
-		s.glowworms[j].coords = directions[j]
+		s.glowworms[j].Coords = directions[j]
 	}
-}
-
-func fi(t, tMax int) float64 {
-	return 1.0 / (1.0 + math.Exp(-50.0*(float64(t)/float64(tMax)-0.1)))
 }
