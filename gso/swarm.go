@@ -5,7 +5,7 @@ import (
 	"math/rand"
 )
 
-func (s *swarm) moveGlowworms() {
+func (s *swarm) moveGlowworms(r *rand.Rand) {
 	directions := make([][]float64, len(s.glowworms), len(s.glowworms))
 
 	for j, worm := range s.glowworms {
@@ -19,7 +19,7 @@ func (s *swarm) moveGlowworms() {
 				probs[i] = (neighbours[i].luciferin - worm.luciferin) / sum
 			}
 			// Choose direction based on probability
-			toss := rand.Float64()
+			toss := r.Float64()
 			lower, upper := 0.0, 0.0
 			var best *glowworm = nil
 			for i := 0; i < len(probs); i++ {

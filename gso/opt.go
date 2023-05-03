@@ -4,41 +4,42 @@ import (
 	"glowworm_swarm_optimization/test_functions"
 	"glowworm_swarm_optimization/utils"
 	"math"
+	"math/rand"
 )
 
 const (
 	RO    = 0.4 // Luciferin decay factor
 	GAMMA = 0.6 // Fitness enhancement factor
 
-	L0 = 5.0  // Initial luciferin level
-	R0 = 5.0  // Initial local decision radius
-	S  = 0.01 // Step size
+	L0 = 5.0 // Initial luciferin level
+	R0 = 5   // Initial local decision radius
+	S  = 0.5 // Step size
 
-	RS = 5 // Sensor range of the glowworms
+	RS = 500.0 // Sensor range of the glowworms
 
-	NT   = 5    // Threshold value of the number of glowworms
+	NT   = 50   // Threshold value of the number of glowworms
 	BETA = 0.08 // Domain change rate
 )
 
-func Optimize(conf utils.OptimizationConfig, f test_functions.Function) ([]*glowworm, []float64, float64) {
+func Optimize(conf utils.OptimizationConfig, f test_functions.Function, r *rand.Rand) ([]*glowworm, []float64, float64, []float64) {
 	// Swarm deployment phase
-	s := initSwarm(conf.N, conf.Diap, conf.M)
+	s := initSwarm(conf.N, conf.Diap, conf.M, r)
 
 	// Main cycle
 	var (
 		maxInd int
 		maxVal float64 = math.MaxFloat64
 		//lastMaxVal float64
-		//maxVals []float64
+		maxVals []float64
 		//stagnation int
 	)
 
 	for t := 0; t < conf.MaxTime; t++ {
 		//lastMaxVal = maxVal
 		maxInd, maxVal = s.updateLuciferin(f)
-		//maxVals = append(maxVals, maxVal)
+		maxVals = append(maxVals, maxVal)
 
-		s.moveGlowworms()
+		s.moveGlowworms(r)
 		s.updateNeigbourhoodRadius()
 
 		/*if lastMaxVal-maxVal > conf.DeltaF {
@@ -50,12 +51,12 @@ func Optimize(conf utils.OptimizationConfig, f test_functions.Function) ([]*glow
 			stagnation = 0
 		}*/
 
-		/*if t > conf.DeltaT {
-			if maxVals[t]-maxVals[t-conf.DeltaT] < conf.DeltaF {
+		if t > conf.DeltaT {
+			if math.Abs(maxVals[t]-maxVals[t-conf.DeltaT]) < conf.DeltaF {
 				break
 			}
-		}*/
+		}
 	}
 
-	return s.glowworms, s.glowworms[maxInd].Coords, maxVal
+	return s.glowworms, s.glowworms[maxInd].Coords, maxVal, maxVals
 }

@@ -13,7 +13,7 @@ type swarm struct {
 	gamma     float64 // Fitness enhancement factor
 }
 
-func initSwarm(swarmSize int, diap utils.Interval, dim int) *swarm {
+func initSwarm(swarmSize int, diap utils.Interval, dim int, r *rand.Rand) *swarm {
 	glowworms := make([]*glowworm, swarmSize, swarmSize)
 	s := &swarm{
 		glowworms: glowworms,
@@ -24,7 +24,7 @@ func initSwarm(swarmSize int, diap utils.Interval, dim int) *swarm {
 	for i := 0; i < swarmSize; i++ {
 		g := initGlowworm(dim)
 		for j := 0; j < dim; j++ {
-			g.Coords[j] = diap.Min + rand.Float64()*(diap.Max-diap.Min)
+			g.Coords[j] = diap.Min + r.Float64()*(diap.Max-diap.Min)
 		}
 		s.glowworms[i] = g
 	}
@@ -57,18 +57,18 @@ func (s *swarm) getNeighbours(index int) ([]*glowworm, float64) {
 	var neighbours []*glowworm
 	// Sum is needed to calculate probability of movement in direction of neighbour
 	sum := 0.0
-	for i, potentialNeighbour := range s.glowworms {
+	for _, potentialNeighbour := range s.glowworms {
 		if potentialNeighbour != s.glowworms[index] {
 			if potentialNeighbour.luciferin > s.glowworms[index].luciferin {
 				n := utils.Norm(s.glowworms[index].Coords, potentialNeighbour.Coords)
 				if n < s.glowworms[index].r {
 					neighbours = append(neighbours, potentialNeighbour)
 					sum += potentialNeighbour.luciferin - s.glowworms[index].luciferin
-					s.glowworms[i].neighbours = len(neighbours)
 				}
 			}
 		}
 	}
+	s.glowworms[index].neighbours = len(neighbours)
 	return neighbours, sum
 }
 

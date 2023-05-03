@@ -9,10 +9,12 @@ import (
 	"math/rand"
 )
 
-func multistart(conf utils.OptimizationConfig, f test_functions.Function, num int, xMin []float64, yMin float64) {
+func multistart(conf utils.OptimizationConfig, f test_functions.Function, diap utils.Interval, num int, xMin []float64, yMin float64, r *rand.Rand) {
 	max := -math.MaxFloat64
 	maxNormX := math.MaxFloat64
 	maxNormY := math.MaxFloat64
+
+	epsX := 0.01 * (diap.Max - diap.Min) * math.Sqrt(float64(len(xMin)))
 
 	sumMaxNormX := 0.0
 	sumMaxNormY := 0.0
@@ -20,8 +22,13 @@ func multistart(conf utils.OptimizationConfig, f test_functions.Function, num in
 	//var vec []float64
 	succ := 0 // Number of successful launches
 
+	/*res := make([]float64, 0)*/
+
 	for i := 0; i < num; i++ {
-		_, v, val := siggso.Optimize(conf, f)
+		_, v, val, _ := siggso.Optimize(conf, f, r)
+
+		/*res = append(res, vals...)*/
+
 		if val > max {
 			max = val
 			//vec = v
@@ -39,36 +46,47 @@ func multistart(conf utils.OptimizationConfig, f test_functions.Function, num in
 			maxNormY = normY
 		}
 
-		if utils.Norm(v, xMin) < 1e-2 {
+		if utils.Norm(v, xMin) <= epsX {
 			succ++
 		}
 	}
 
-	fmt.Printf("Min value: %.15f\n", -max)
+	// Write to file
+	/*file, _ := os.Create("res_siggso.csv")
+	for j := 0; j < len(res); j++ {
+		fmt.Fprintf(file, "%e\n", res[j])
+	}
+	file.Close()*/
+
+	fmt.Printf("Min value: %e\n", -max)
 	//fmt.Printf("Coords:    %v\n", vec)
-	fmt.Printf("Best X presision: %.15f\n", maxNormX)
-	fmt.Printf("Best Y presision: %.15f\n", maxNormY)
-	fmt.Printf("M X presision: %.15f\n", sumMaxNormX/float64(num))
-	fmt.Printf("M Y presision: %.15f\n", sumMaxNormY/float64(num))
-	fmt.Printf("Success rate: %f\n", float64(succ)/float64(num))
+	fmt.Printf("Best X presision: %e\n", maxNormX)
+	fmt.Printf("Best Y presision: %e\n", maxNormY)
+	fmt.Printf("M X presision: %e\n", sumMaxNormX/float64(num))
+	fmt.Printf("M Y presision: %e\n", sumMaxNormY/float64(num))
+	fmt.Printf("Success rate: %.2f\n", float64(succ)/float64(num))
+	fmt.Println()
 }
 
 func main() {
-	rand.Seed(12)
-	dims := 2
+	r := rand.New(rand.NewSource(12))
 
-	// Get test function and diap for x vector
-	f, diap, xMin, yMin := test_functions.GetSphere(dims)
+	dims := []int{2, 4, 8, 16, 32, 64}
 
-	// Optimization config
-	conf := utils.OptimizationConfig{
-		MaxTime: 1000,
-		DeltaF:  1e-6, // Corriodor height
-		DeltaT:  20,   // Corridor length
-		N:       50,   // Swarm size
-		M:       dims, // Dimensions
-		Diap:    diap,
+	for _, dim := range dims {
+		// Get test function and diap for x vector
+		f, diap, xMin, yMin := test_functions.GetSphere(dim)
+
+		// Optimization config
+		conf := utils.OptimizationConfig{
+			MaxTime: 1000,
+			DeltaF:  1e-6, // Corriodor height
+			DeltaT:  1000, // Corridor length
+			N:       50,   // Swarm size
+			M:       dim,  // Dimensions
+			Diap:    diap,
+		}
+
+		multistart(conf, f, diap, 100, xMin, yMin, r)
 	}
-
-	multistart(conf, f, 100, xMin, yMin)
 }
